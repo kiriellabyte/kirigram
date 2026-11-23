@@ -1,5 +1,5 @@
 /*
- * kiriellagram - built-in ws proxy
+ * kirigram - built-in ws proxy
  * GPLv3
  *
  * owns the native proxy lifecycle and wires it into telegram's own proxy settings
