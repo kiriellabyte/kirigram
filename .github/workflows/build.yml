@@ -82,6 +82,7 @@ jobs:
           ./run init libs dav1d
           ./run init libs ffmpeg
           ./run init action boringssl
+          ./run init libs boringssl
           cd TMessagesProj/jni
           ./patch_boringssl.sh
           cd ../..
