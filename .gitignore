@@ -1,0 +1,9 @@
+upstream/
+buildtree/
+vendor/
+artifacts/
+local.properties
+*.apk
+*.keystore
+__pycache__/
+*.pyc
