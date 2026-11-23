@@ -20,7 +20,7 @@ cd "$VENDOR"
 cargo ndk \
   -t arm64-v8a \
   -t armeabi-v7a \
-  -p 21 \
+  -P 21 \
   -o "$OUT" \
   build --release
 
