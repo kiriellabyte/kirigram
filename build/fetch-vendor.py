@@ -48,7 +48,7 @@ def main():
         f"revision: {REV}\n"
         "license: GPL-3.0\n"
         "original design: https://github.com/Flowseal/tg-ws-proxy (MIT)\n"
-        "changes in kiriellagram: crate renamed to kiriproxy, no logic changes\n"
+        "changes in kirigram: crate renamed to kiriproxy, no logic changes\n"
     )
     with open(os.path.join(OUT, "NOTICE.rust"), "w", encoding="utf-8") as f:
         f.write(notice)
