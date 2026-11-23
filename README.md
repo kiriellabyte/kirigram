@@ -1,6 +1,4 @@
-# kiriellagram
-
-short name: **kirigram**
+# kirigram
 
 an unofficial telegram android mod. customization-focused base with a real built-in MTProto-over-WebSocket proxy for russian users. no second app, no manual `tg://proxy` link — the proxy starts with telegram and configures telegram's own proxy settings by itself.
 
@@ -55,7 +53,7 @@ see [docs/build.md](docs/build.md) for the actual build steps and [docs/architec
 3. push, wait for the `build-kirigram` workflow
 4. download the apk from the workflow artifact or the release
 
-the app id in the upstream build.gradle is kept as-is on purpose: changing it breaks the bundled `google-services.json`. renaming to a fully own package is a separate step documented in [docs/build.md](docs/build.md).
+the application id is `com.kirigram` and the launcher name is `kirigram`. the overlay rewrites upstream's build id and the bundled `google-services.json` package together so the build stays valid.
 
 ## repo layout
 
