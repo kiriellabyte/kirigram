@@ -65,12 +65,6 @@ jobs:
           sed -i 's/\/\///g' settings.gradle
           cp ../local.properties .
 
-      - name: fetch and build proxy engine
-        run: |
-          python3 build/fetch-vendor.py
-          chmod +x build/build-proxy.sh
-          ./build/build-proxy.sh "$PWD/upstream"
-
       - name: overlay kirigram sources
         run: python3 build/overlay.py "$PWD/upstream"
 
@@ -84,6 +78,13 @@ jobs:
           ./run init action boringssl
           ./run init libs boringssl
           ./run libs native
+
+      # must run after `run libs native` — that script rm -rf's src/main/libs/<abi>
+      - name: fetch and build proxy engine
+        run: |
+          python3 build/fetch-vendor.py
+          chmod +x build/build-proxy.sh
+          ./build/build-proxy.sh "$PWD/upstream"
 
       - name: signing and local properties
         run: |
