@@ -1,0 +1,116 @@
+name: build-kirigram
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+env:
+  UPSTREAM_REV: 01994b23a8684432490d7a28b6d12c7628d65a10
+  NDK_VERSION: 27.2.12479018
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: checkout kiriellagram
+        uses: actions/checkout@v4
+
+      - name: setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: setup java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      - name: setup rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: setup android sdk
+        uses: android-actions/setup-android@v3
+
+      - name: install ndk and build tools
+        run: |
+          echo "y" | sdkmanager --install "ndk;${NDK_VERSION}" "build-tools;36.0.0" "platforms;android-36" --sdk_root=${ANDROID_SDK_ROOT}
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          echo "ndk.dir=${ANDROID_HOME}/ndk/${NDK_VERSION}" >> local.properties
+
+      - name: fetch pinned NullcoreGram
+        run: |
+          mkdir upstream
+          cd upstream
+          git init
+          git remote add origin https://github.com/NullCoreDeveloper/NullcoreGram.git
+          git fetch --depth 1 origin ${UPSTREAM_REV}
+          git checkout FETCH_HEAD
+          git submodule update --init --recursive --depth 1
+          sed -i 's/\/\///g' settings.gradle
+          cp ../local.properties .
+
+      - name: fetch and build proxy engine
+        run: |
+          python3 build/fetch-vendor.py
+          chmod +x build/build-proxy.sh
+          ./build/build-proxy.sh "$PWD/upstream"
+
+      - name: overlay kirigram sources
+        run: python3 build/overlay.py "$PWD/upstream"
+
+      - name: native telegram libs
+        run: |
+          cd upstream
+          ./run init action ffmpeg
+          ./run init libs libvpx
+          ./run init libs dav1d
+          ./run init libs ffmpeg
+          ./run init action boringssl
+          cd TMessagesProj/jni
+          ./patch_boringssl.sh
+          cd ../..
+          ./run libs native
+
+      - name: signing and local properties
+        run: |
+          keytool -genkeypair -v \
+            -keystore upstream/TMessagesProj/release.keystore \
+            -storepass kirigram -keypass kirigram \
+            -alias kirigram -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=kirigram, OU=kirigram, O=kirigram, L=internet, S=internet, C=RU" >/dev/null
+          cat > local.properties <<EOF
+          sdk.dir=${ANDROID_HOME}
+          ndk.dir=${ANDROID_HOME}/ndk/${NDK_VERSION}
+          KEYSTORE_PASS=kirigram
+          ALIAS_NAME=kirigram
+          ALIAS_PASS=kirigram
+          TELEGRAM_APP_ID=${{ secrets.TELEGRAM_APP_ID || '11535358' }}
+          TELEGRAM_APP_HASH=${{ secrets.TELEGRAM_APP_HASH || '33d372962fadb01df47e6ceed4e33cd6' }}
+          EOF
+          cp local.properties upstream/local.properties
+          echo "LOCAL_PROPERTIES=$(base64 -w0 local.properties)" >> $GITHUB_ENV
+
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: build apk
+        run: |
+          cd upstream
+          sed -i "s/2000000000000/$(date +%s%N | cut -c1-13)/g" gradle.properties
+          ./gradlew TMessagesProj:assemblePublicRelease --no-configuration-cache --stacktrace
+          mkdir -p ../artifacts
+          find TMessagesProj/build/outputs/apk -name '*.apk' -exec cp {} ../artifacts/ \;
+
+      - name: upload apks
+        uses: actions/upload-artifact@v4
+        with:
+          name: kirigram-apks
+          path: artifacts/*.apk
+          if-no-files-found: error
