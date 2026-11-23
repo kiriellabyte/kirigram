@@ -91,7 +91,7 @@ def main(upstream):
         t = replace_once(
             t,
             "        ProxyRotationController.init();\n",
-            "        ProxyRotationController.init();\n        KiriProxyManager.init(applicationContext);\n",
+            "        ProxyRotationController.init();\n        KiriProxyManager.INSTANCE.init(applicationContext);\n",
             "loader-init",
         )
         return t
