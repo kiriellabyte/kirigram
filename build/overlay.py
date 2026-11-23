@@ -7,6 +7,7 @@ Every edit is asserted, so an upstream drift fails the build instead of
 silently producing a broken APK.
 """
 import os
+import re
 import shutil
 import sys
 
@@ -58,6 +59,122 @@ def patch(path, fn):
     with open(path, "w", encoding="utf-8") as f:
         f.write(text)
     print("patched", path)
+
+
+def regex_once(text, pattern, repl, label, flags=re.M, count=1):
+    out, n = re.subn(pattern, repl, text, flags=flags)
+    if n != count:
+        raise SystemExit(f"overlay: anchor [{label}] matched {n}, expected {count}")
+    return out
+
+
+# nullcoregram's "webproxy" is a client for somebody else's wss bridge.
+# kirigram ships the bridge, so remove the fork-only feature entirely:
+# backend hooks, deeplink parsing, settings UI and the manager class.
+def strip_nullcore_webproxy(upstream):
+    rels = {
+        "cm": "TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java",
+        "ps": "TMessagesProj/src/main/java/org/telegram/ui/ProxySettingsActivity.java",
+        "pl": "TMessagesProj/src/main/java/org/telegram/ui/ProxyListActivity.java",
+        "au": "TMessagesProj/src/main/java/org/telegram/messenger/AndroidUtilities.java",
+        "cpp": "TMessagesProj/jni/tgnet/ConnectionsManager.cpp",
+    }
+    manager = os.path.join(
+        upstream,
+        "TMessagesProj/src/main/java/org/telegram/tgnet/WebProxyManager.kt",
+    )
+    paths = {k: os.path.join(upstream, v) for k, v in rels.items()}
+    for p in list(paths.values()) + [manager]:
+        if not os.path.isfile(p):
+            raise SystemExit("overlay: upstream file missing: " + p)
+    data = {k: open(p, encoding="utf-8").read() for k, p in paths.items()}
+
+    t = data["cm"]
+    t = regex_once(t,
+        r'                if \("webproxy"\.equals\(SharedConfig\.currentProxy\.secret\)\) \{.*?\n                \} else \{\n(                    native_setProxySettings\(currentAccount,.*?\n)                \}',
+        r'\1', "webproxy-cm-init", re.S)
+    t = regex_once(t,
+        r'\n        if \("webproxy"\.equals\(secret\)\) \{.*?\n        \}\n',
+        '\n', "webproxy-cm-check", re.S)
+    t = regex_once(t,
+        r'\n        if \(enabled && "webproxy"\.equals\(secret\)\) \{.*?\n        \}\n',
+        '\n', "webproxy-cm-startstop", re.S)
+    t = regex_once(t,
+        r'                if \("webproxy"\.equals\(secret\)\) \{.*?\n                \} else \{\n(                    native_setProxySettings\(.*?\n)                \}',
+        r'\1', "webproxy-cm-setproxy", re.S, 2)
+    data["cm"] = t
+
+    t = data["ps"]
+    t = regex_once(t,
+        r'                    if \(currentType == 2 && currentProxyInfo\.port == 0\) \{\n                        currentProxyInfo\.port = 443;\n                    \}\n',
+        '', "webproxy-ps-port")
+    t = regex_once(t,
+        r'(?m)^                    \} else if \(currentType == 2\) \{.*?^                    \}\n',
+        '                    }\n', "webproxy-ps-save", re.S | re.M)
+    t = regex_once(t,
+        r'    private RadioCell\[\] typeCell = new RadioCell\[3\];',
+        '    private RadioCell[] typeCell = new RadioCell[2];', "webproxy-ps-array")
+    t = regex_once(t,
+        r'        for \(int a = 0; a < 3; a\+\+\) \{\n            typeCell\[a\] = new RadioCell\(context\);',
+        '        for (int a = 0; a < 2; a++) {\n            typeCell[a] = new RadioCell(context);', "webproxy-ps-loop")
+    t = regex_once(t,
+        r'            \} else \{\n                typeCell\[a\]\.setText\("Use Web Proxy", a == currentType, false\);\n            \}\n',
+        '            }\n', "webproxy-ps-cell")
+    t = regex_once(t,
+        r'                if \(currentType == 1 \|\| currentType == 2\) \{\n                    url = currentType == 2 \? "tg://webproxy\?" : "https://t\.me/proxy\?";',
+        '                if (currentType == 1) {\n                    url = "https://t.me/proxy?";', "webproxy-ps-url")
+    t = regex_once(t,
+        r'        if \("webproxy"\.equals\(currentProxyInfo\.secret\)\) \{.*?\n            setProxyType\(2, false\);\n        \} else \{\n            setProxyType\(TextUtils\.isEmpty\(currentProxyInfo\.secret\) \? 0 : 1, false\);\n        \}',
+        '        setProxyType(TextUtils.isEmpty(currentProxyInfo.secret) ? 0 : 1, false);',
+        "webproxy-ps-load", re.S)
+    t = regex_once(t,
+        r'        boolean portValid = currentType == 2 \|\| Utilities\.parseInt\(',
+        '        boolean portValid = Utilities.parseInt(', "webproxy-ps-valid")
+    t = regex_once(t,
+        r'(?m)^            \} else if \(currentType == 2\) \{.*?^            \}\n',
+        '            }\n', "webproxy-ps-type", re.S | re.M)
+    t = regex_once(t,
+        r'            typeCell\[2\]\.setChecked\(currentType == 2, animated\);\n',
+        '', "webproxy-ps-checked")
+    data["ps"] = t
+
+    t = data["pl"]
+    t = regex_once(t,
+        r'                    if \("webproxy"\.equals\(secret\)\) \{.*?^                    \} else if \(!TextUtils\.isEmpty\(secret\)\) \{',
+        '                    if (!TextUtils.isEmpty(secret)) {',
+        "webproxy-pl-share", re.S | re.M)
+    data["pl"] = t
+
+    t = data["au"]
+    t = regex_once(t,
+        r'(?m)^                                \} else if \(path\.startsWith\("/webproxy"\)\) \{.*?^                                \}\n',
+        '                                }\n', "webproxy-au-deeplink", re.S | re.M)
+    t = regex_once(t,
+        r' \|\| url\.startsWith\("tg:webproxy"\) \|\| url\.startsWith\("tg://webproxy"\)',
+        '', "webproxy-au-urls")
+    t = regex_once(t,
+        r'                            boolean isWebProxy = url\.startsWith\("tg:webproxy"\) \|\| url\.startsWith\("tg://webproxy"\);\n',
+        '', "webproxy-au-isweb")
+    t = regex_once(t,
+        r'\.replace\("tg://webproxy", "tg://telegram\.org"\)\.replace\("tg:webproxy", "tg://telegram\.org"\)',
+        '', "webproxy-au-replace")
+    t = regex_once(t,
+        r'                            if \(isWebProxy\) \{.*?\n                            \}\n',
+        '', "webproxy-au-secret", re.S)
+    data["au"] = t
+
+    t = data["cpp"]
+    t = regex_once(t,
+        r'    if \(secret == "webproxy"\) \{\n        return secret;\n    \}\n',
+        '', "webproxy-cpp-secret")
+    data["cpp"] = t
+
+    for k, p in paths.items():
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(data[k])
+        print("stripped webproxy from", os.path.basename(p))
+    os.remove(manager)
+    print("removed WebProxyManager.kt")
 
 
 def main(upstream):
@@ -151,6 +268,8 @@ def main(upstream):
         if name.endswith(".kt"):
             shutil.copy2(os.path.join(src, name), os.path.join(dest, name))
             print("copied", name)
+
+    strip_nullcore_webproxy(upstream)
 
     print("overlay done")
 

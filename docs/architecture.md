@@ -8,10 +8,10 @@ pinned at `01994b23a8684432490d7a28b6d12c7628d65a10`. it already brings:
 
 - telegram's mtproto stack and proxy settings (`SharedConfig`, `ConnectionsManager`)
 - ayugram/nagram customizations
-- a kotlin `WebProxyManager` and `ProxyRotationController`
+- a kotlin `WebProxyManager` (removed by our overlay) and `ProxyRotationController`
 - material/customization features we'd otherwise have to write
 
-we only touch four files there: `AndroidManifest.xml`, `ApplicationLoader.java`, `TMessagesProj/build.gradle` and `proguard-rules.pro`. `build/overlay.py` does that with asserted string replacements.
+the overlay edits the manifest, `ApplicationLoader.java`, `build.gradle`, `google-services.json` and `proguard-rules.pro`, then strips the fork-only webproxy code from `ConnectionsManager.java`, `ProxySettingsActivity.java`, `ProxyListActivity.java`, `AndroidUtilities.java` and native `ConnectionsManager.cpp`, and deletes `WebProxyManager.kt`. every edit is asserted, so upstream drift fails the build instead of silently producing a broken apk.
 
 ### 2. proxy engine (Rust)
 
