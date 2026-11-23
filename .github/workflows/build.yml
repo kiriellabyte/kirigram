@@ -83,9 +83,6 @@ jobs:
           ./run init libs ffmpeg
           ./run init action boringssl
           ./run init libs boringssl
-          cd TMessagesProj/jni
-          ./patch_boringssl.sh
-          cd ../..
           ./run libs native
 
       - name: signing and local properties
