@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 120
 
     steps:
-      - name: checkout kiriellagram
+      - name: checkout kirigram
         uses: actions/checkout@v4
 
       - name: setup python
@@ -114,7 +114,11 @@ jobs:
           sed -i "s/2000000000000/$(date +%s%N | cut -c1-13)/g" gradle.properties
           ./gradlew TMessagesProj:assemblePublicRelease --no-configuration-cache --stacktrace
           mkdir -p ../artifacts
-          find TMessagesProj/build/outputs/apk -name '*.apk' -exec cp {} ../artifacts/ \;
+          for f in $(find TMessagesProj/build/outputs/apk -name '*.apk'); do
+            name=$(basename "$f")
+            name=${name/NullcoreGram/kirigram}
+            cp "$f" "../artifacts/$name"
+          done
 
       - name: upload apks
         uses: actions/upload-artifact@v4
