@@ -20,6 +20,18 @@ three upstreams are combined:
 
 telegram android is GPL v2 **or later**, so combining it with GPLv3 proxy code works. the whole fork is distributed under GPLv3.
 
+## isn't there already a proxy in nullcoregram?
+
+yes, and it's worth being clear about the difference, because they are not the same thing.
+
+nullcoregram ships a `WebProxyManager`. it opens a local socket, but it is a **client**: it tunnels to a remote bridge server you have to supply yourself as a `wss://host/secret` link. that host runs someone else's bridge, so you still depend on a third-party server staying online and not getting blocked. it is basically a `tg://proxy` link with extra steps.
+
+kirigram embeds the **proxy server itself** as `libkiriproxy.so`. it connects straight to telegram's own `kws{dc}.web.telegram.org` websocket endpoints, cloudflare workers, and falls back to the DC ips. there is no third-party bridge, no link to hunt down, and no second app. it generates its own secret and applies itself to telegram's proxy settings on boot.
+
+so the difference is where the tunnel ends: nullcoregram's ends at a stranger's server, kirigram's ends at telegram. that is the point for users who want zero dependence on outside proxy servers.
+
+if you already have a working webproxy link, nullcoregram's built-in client may be enough for you. kirigram earns its keep when you want the proxy to be the app, not something you connect to.
+
 ## status
 
 code + ci scaffold. the apk is built by github actions because telegram's build needs android studio, ndk 27.2 and sdk 36 — none of that fits on a phone.
