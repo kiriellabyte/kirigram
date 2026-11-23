@@ -1,5 +1,5 @@
 /*
- * kiriellagram - built-in ws proxy
+ * kirigram - built-in ws proxy
  * GPLv3
  *
  * thin JNA binding over libkiriproxy.so (vendored from amurcanov/tg-ws-proxy-android)
