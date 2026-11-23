@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upload the kiriellagram source tree to an empty GitHub repo via the API."""
+"""Upload the kirigram source tree to an empty GitHub repo via the API."""
 import base64
 import json
 import os
