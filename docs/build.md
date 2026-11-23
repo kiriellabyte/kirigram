@@ -28,8 +28,6 @@ git checkout FETCH_HEAD
 git submodule update --init --recursive --depth 1
 cd ..
 
-python3 build/fetch-vendor.py
-./build/build-proxy.sh "$PWD/buildtree"
 python3 build/overlay.py "$PWD/buildtree"
 
 cd buildtree
@@ -40,6 +38,11 @@ cd buildtree
 ./run init action boringssl
 ./run init libs boringssl
 ./run libs native
+cd ..
+# after `run libs native` — it wipes src/main/libs/<abi>
+python3 build/fetch-vendor.py
+./build/build-proxy.sh "$PWD/buildtree"
+cd buildtree
 
 echo "sdk.dir=$ANDROID_HOME" > local.properties
 echo "ndk.dir=$ANDROID_HOME/ndk/27.2.12479018" >> local.properties
