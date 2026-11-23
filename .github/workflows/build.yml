@@ -91,8 +91,8 @@ jobs:
           KEYSTORE_PASS=kirigram
           ALIAS_NAME=kirigram
           ALIAS_PASS=kirigram
-          TELEGRAM_APP_ID=${{ secrets.TELEGRAM_APP_ID || '11535358' }}
-          TELEGRAM_APP_HASH=${{ secrets.TELEGRAM_APP_HASH || '33d372962fadb01df47e6ceed4e33cd6' }}
+          TELEGRAM_APP_ID=30666146
+          TELEGRAM_APP_HASH=94a896b7beee13773f579ff7f8cda789
           EOF
           cp local.properties upstream/local.properties
           echo "LOCAL_PROPERTIES=$(base64 -w0 local.properties)" >> $GITHUB_ENV
