@@ -61,9 +61,9 @@ ApplicationLoader.onCreate()
 
 `KiriProxyManager.stop()` stops the native engine, then restores whatever proxy telegram had before kirigram touched it (saved in prefs at first apply), and posts `proxySettingsChanged` again.
 
-## why the app id is unchanged
+## app identity
 
-upstream applies the google-services plugin and ships a `google-services.json` bound to its own application id. changing the id requires a real firebase project. launcher name is changed to `kiriellagram` via the manifest label.
+the application id is `com.kirigram` and the launcher label is `kirigram`. the overlay rewrites upstream's `defaultConfig.applicationId` and the `package_name` inside the bundled `google-services.json` together, so the google-services plugin still validates. firebase push registration may not work with the upstream project credentials, but telegram's own push path is unaffected.
 
 ## license note
 
