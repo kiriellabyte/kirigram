@@ -1,6 +1,6 @@
 # building
 
-you cannot build this on the phone. telegram needs android studio 2025.1.4, ndk 27.2.12479018, sdk 36, jdk 17, cmake and a lot of ram. use github actions (already wired) or a desktop.
+the build needs android studio 2025.1.4, ndk 27.2.12479018, sdk 36, jdk 17, cmake and plenty of ram. github actions is already wired up and is the easiest path; a local linux box works too.
 
 ## github actions (recommended)
 
