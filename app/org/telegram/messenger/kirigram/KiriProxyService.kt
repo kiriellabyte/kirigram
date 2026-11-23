@@ -1,5 +1,5 @@
 /*
- * kiriellagram - built-in ws proxy
+ * kirigram - built-in ws proxy
  * GPLv3
  */
 package org.telegram.messenger.kirigram
