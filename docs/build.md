@@ -38,7 +38,7 @@ cd buildtree
 ./run init libs dav1d
 ./run init libs ffmpeg
 ./run init action boringssl
-(cd TMessagesProj/jni && ./patch_boringssl.sh)
+./run init libs boringssl
 ./run libs native
 
 echo "sdk.dir=$ANDROID_HOME" > local.properties
