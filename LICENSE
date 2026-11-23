@@ -1,0 +1,19 @@
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+This project combines GPL-2.0-or-later code (Telegram Android / NullcoreGram)
+with GPL-3.0 code (tg-ws-proxy-android). The combined work is distributed
+under GPLv3.
+
+The full GPLv3 text is available at:
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+Upstream license files:
+- Telegram: https://github.com/TelegramMessenger/Telegram-Android/blob/master/LICENSE
+- NullcoreGram: https://github.com/NullCoreDeveloper/NullcoreGram
+- tg-ws-proxy-android: https://github.com/amurcanov/tg-ws-proxy-android/blob/main/LICENSE
+- Flowseal/tg-ws-proxy (MIT): https://github.com/Flowseal/tg-ws-proxy/blob/main/LICENSE
