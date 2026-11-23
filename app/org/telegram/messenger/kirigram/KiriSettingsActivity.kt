@@ -1,5 +1,5 @@
 /*
- * kiriellagram - built-in ws proxy
+ * kirigram - built-in ws proxy
  * GPLv3
  *
  * deliberately resource-free so it can be dropped into any telegram fork
