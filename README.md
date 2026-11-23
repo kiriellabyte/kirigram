@@ -34,7 +34,7 @@ if you already have a working webproxy link, nullcoregram's built-in client may 
 
 ## status
 
-code + ci scaffold. the apk is built by github actions because telegram's build needs android studio, ndk 27.2 and sdk 36 — none of that fits on a phone.
+code + ci scaffold. the apk is built by github actions (`build-kirigram`), which pulls the pinned upstreams, compiles the rust proxy and the telegram native libs, and uploads the apk as an artifact.
 
 see [docs/build.md](docs/build.md) for the actual build steps and [docs/architecture.md](docs/architecture.md) for how the pieces fit.
 
