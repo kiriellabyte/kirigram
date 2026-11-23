@@ -13,7 +13,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 MANIFEST_ADD = """
-        <!-- kiriellagram: built-in proxy -->
+        <!-- kirigram: built-in proxy -->
         <service
             android:name="org.telegram.messenger.kirigram.KiriProxyService"
             android:exported="false"
@@ -35,7 +35,7 @@ MANIFEST_ADD = """
 """
 
 PROGUARD_ADD = """
-# kiriellagram
+# kirigram
 -keep class org.telegram.messenger.kirigram.** { *; }
 -keep class com.sun.jna.** { *; }
 -keep class * extends com.sun.jna.Library { *; }
@@ -67,18 +67,19 @@ def main(upstream):
         "TMessagesProj/src/main/java/org/telegram/messenger/ApplicationLoader.java",
     )
     gradle = os.path.join(upstream, "TMessagesProj/build.gradle")
+    google_services = os.path.join(upstream, "TMessagesProj/google-services.json")
     proguard = os.path.join(upstream, "TMessagesProj/proguard-rules.pro")
     dest = os.path.join(
         upstream, "TMessagesProj/src/main/java/org/telegram/messenger/kirigram"
     )
 
-    for p in (manifest, loader, gradle):
+    for p in (manifest, loader, gradle, google_services):
         if not os.path.isfile(p):
             raise SystemExit("overlay: upstream file missing: " + p)
 
     def do_manifest(t):
         t = replace_once(t, "</application>", MANIFEST_ADD + "    </application>", "manifest-app-close")
-        t = replace_once(t, 'android:label="@string/NekoX"', 'android:label="kiriellagram"', "app-label")
+        t = replace_once(t, 'android:label="@string/NekoX"', 'android:label="kirigram"', "app-label")
         return t
 
     def do_loader(t):
@@ -101,9 +102,15 @@ def main(upstream):
             t,
             "    implementation 'com.google.code.gson:gson:2.11.0'\n",
             "    implementation 'com.google.code.gson:gson:2.11.0'\n"
-            "    // kiriellagram: JNA binding for libkiriproxy.so\n"
+            "    // kirigram: JNA binding for libkiriproxy.so\n"
             "    implementation 'net.java.dev.jna:jna:5.14.0@aar'\n",
             "gradle-jna",
+        )
+        t = replace_once(
+            t,
+            '    defaultConfig.applicationId = "com.nullcoregram"',
+            '    defaultConfig.applicationId = "com.kirigram"',
+            "gradle-application-id",
         )
         # release jniLibs already points at src/main/libs, debug needs it too
         t = replace_once(
@@ -115,9 +122,18 @@ def main(upstream):
         )
         return t
 
+    def do_google_services(t):
+        return replace_once(
+            t,
+            '"package_name": "com.nullcoregram"',
+            '"package_name": "com.kirigram"',
+            "google-services-package",
+        )
+
     patch(manifest, do_manifest)
     patch(loader, do_loader)
     patch(gradle, do_gradle)
+    patch(google_services, do_google_services)
 
     if os.path.exists(proguard):
         with open(proguard, "a", encoding="utf-8") as f:
