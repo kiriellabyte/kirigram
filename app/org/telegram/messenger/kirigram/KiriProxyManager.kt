@@ -12,10 +12,10 @@ import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
 import org.telegram.messenger.AndroidUtilities
-import org.telegram.messenger.ConnectionsManager
 import org.telegram.messenger.MessagesController
 import org.telegram.messenger.NotificationCenter
 import org.telegram.messenger.SharedConfig
+import org.telegram.tgnet.ConnectionsManager
 import java.io.File
 import java.security.SecureRandom
 
