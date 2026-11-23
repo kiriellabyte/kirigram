@@ -62,20 +62,17 @@ TELEGRAM_APP_HASH=abcdef...
 
 the overlay passes those to gradle through the base64 `LOCAL_PROPERTIES` env in CI.
 
-## changing the package name
+## package name
 
-not done by default because of `google-services.json`. to do it properly:
+the overlay sets `defaultConfig.applicationId` to `com.kirigram` and rewrites the `package_name` in the bundled `TMessagesProj/google-services.json` to match. upstream's manifest uses `${applicationId}` placeholders, so providers and permissions follow automatically.
 
-1. create a firebase android app with your new package id
-2. download its `google-services.json` into `TMessagesProj/`
-3. change `defaultConfig.applicationId` in `TMessagesProj/build.gradle`
-4. update `applicationId` expectations in any manifest placeholders
+firebase push registration from the upstream project may not validate the new package; telegram's own push path is unaffected. if you want fcm, register `com.kirigram` in your own firebase project and drop its `google-services.json` into `TMessagesProj/`.
 
-until then the mod installs side-by-side only if the signature differs. our CI generates its own signing key, so it already installs next to the stock telegram.
+it installs side-by-side with stock telegram because the signing key is different.
 
 ## troubleshooting
 
 - `overlay: missing anchor` — upstream revision drifted, pin a newer commit in `build.yml` and re-check the anchors
 - `StartProxy failed: -3` — bind failed, usually port already taken; change port in the in-app settings
 - proxy connects but nothing loads — try disabling cloudflare mode or set a custom cf domain in settings
-- google services error — you changed the app id without replacing `google-services.json`
+- google services error — `package_name` in `google-services.json` doesn't match `applicationId`
