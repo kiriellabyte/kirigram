@@ -42,7 +42,14 @@ jobs:
 
       - name: install ndk and build tools
         run: |
-          echo "y" | sdkmanager --install "ndk;${NDK_VERSION}" "build-tools;36.0.0" "platforms;android-36" --sdk_root=${ANDROID_SDK_ROOT}
+          for i in 1 2 3; do
+            if echo "y" | sdkmanager --install "ndk;${NDK_VERSION}" "build-tools;36.0.0" "platforms;android-36" --sdk_root=${ANDROID_SDK_ROOT}; then
+              break
+            fi
+            echo "sdkmanager attempt $i failed, retrying"
+            sleep 10
+          done
+          test -d "${ANDROID_SDK_ROOT}/ndk/${NDK_VERSION}" || { echo "ndk install failed"; exit 1; }
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
           echo "ndk.dir=${ANDROID_HOME}/ndk/${NDK_VERSION}" >> local.properties
 
