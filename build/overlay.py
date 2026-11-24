@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Overlay kirigram sources and edits onto a pinned NullcoreGram checkout.
+"""Overlay kirigram sources and edits onto a pinned upstream checkout.
 
 Usage: python3 build/overlay.py path/to/upstream
 
@@ -68,10 +68,10 @@ def regex_once(text, pattern, repl, label, flags=re.M, count=1):
     return out
 
 
-# nullcoregram's "webproxy" is a client for somebody else's wss bridge.
+# the upstream fork's "webproxy" is a client for somebody else's wss bridge.
 # kirigram ships the bridge, so remove the fork-only feature entirely:
 # backend hooks, deeplink parsing, settings UI and the manager class.
-def strip_nullcore_webproxy(upstream):
+def strip_upstream_webproxy(upstream):
     rels = {
         "cm": "TMessagesProj/src/main/java/org/telegram/tgnet/ConnectionsManager.java",
         "ps": "TMessagesProj/src/main/java/org/telegram/ui/ProxySettingsActivity.java",
@@ -177,6 +177,58 @@ def strip_nullcore_webproxy(upstream):
     print("removed WebProxyManager.kt")
 
 
+# upstream ships a lot of fork branding in string resources (N-Config, NCgram,
+# Nagram, Nekogram). rewrite only the displayed values, never the resource
+# names or code identifiers, so nothing that references them breaks.
+REBRAND = (
+    ("NullcoreGram", "kirigram"),
+    ("NullCoreGram", "kirigram"),
+    ("N-Config", "kirigram settings"),
+    ("NekoX Public Proxy", "kirigram proxy"),
+    ("NCgram", "kirigram"),
+    ("Nagram", "kirigram"),
+    ("Nekogram", "kirigram"),
+    ("NekoX", "kirigram"),
+)
+
+
+def rebrand_strings(upstream):
+    res = os.path.join(upstream, "TMessagesProj/src/main/res")
+    if not os.path.isdir(res):
+        raise SystemExit("overlay: missing resource dir: " + res)
+    changed_files = 0
+    changed_values = 0
+    for d in sorted(os.listdir(res)):
+        if not d.startswith("values"):
+            continue
+        dd = os.path.join(res, d)
+        if not os.path.isdir(dd):
+            continue
+        for name in sorted(os.listdir(dd)):
+            if not (name.startswith("strings") and name.endswith(".xml")):
+                continue
+            p = os.path.join(dd, name)
+            with open(p, encoding="utf-8") as f:
+                text = f.read()
+
+            def repl(m):
+                nonlocal changed_values
+                old = m.group(2)
+                new = old
+                for a, b in REBRAND:
+                    new = new.replace(a, b)
+                if new != old:
+                    changed_values += 1
+                return m.group(1) + new + m.group(3)
+
+            out = re.sub(r"(<string\b[^>]*>)([^<]*)(</string>)", repl, text)
+            if out != text:
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write(out)
+                changed_files += 1
+    print(f"rebranded {changed_values} string values in {changed_files} files")
+
+
 def main(upstream):
     manifest = os.path.join(upstream, "TMessagesProj/src/main/AndroidManifest.xml")
     loader = os.path.join(
@@ -269,7 +321,8 @@ def main(upstream):
             shutil.copy2(os.path.join(src, name), os.path.join(dest, name))
             print("copied", name)
 
-    strip_nullcore_webproxy(upstream)
+    strip_upstream_webproxy(upstream)
+    rebrand_strings(upstream)
 
     print("overlay done")
 

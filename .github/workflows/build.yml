@@ -53,7 +53,7 @@ jobs:
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
           echo "ndk.dir=${ANDROID_HOME}/ndk/${NDK_VERSION}" >> local.properties
 
-      - name: fetch pinned NullcoreGram
+      - name: fetch pinned upstream
         run: |
           mkdir upstream
           cd upstream

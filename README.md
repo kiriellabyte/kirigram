@@ -12,15 +12,15 @@ three upstreams are combined:
 
 | part | source | license |
 | --- | --- | --- |
-| client base | [NullcoreGram](https://github.com/NullCoreDeveloper/NullcoreGram) @ `01994b23a8684432490d7a28b6d12c7628d65a10` | GPL-2.0-or-later |
+| client base | [pinned upstream fork](https://github.com/NullCoreDeveloper/NullcoreGram) @ `01994b23a8684432490d7a28b6d12c7628d65a10` | GPL-2.0-or-later |
 | proxy engine | [tg-ws-proxy-android](https://github.com/amurcanov/tg-ws-proxy-android) @ `540e588d15fbdf806f694fbe0b952ff044d39a07` | GPL-3.0 |
 | original proxy design | [Flowseal/tg-ws-proxy](https://github.com/Flowseal/tg-ws-proxy) | MIT |
 
 telegram android is GPL v2 **or later**, so combining it with GPLv3 proxy code works. the whole fork is distributed under GPLv3.
 
-## isn't there already a proxy in nullcoregram?
+## isn't there already a proxy in the base client?
 
-we removed it. nullcoregram ships a `WebProxyManager` that opens a local socket but is really a **client**: it tunnels to a remote bridge you supply as a `wss://host/secret` link, so you still depend on somebody else's server. the overlay strips that class, its settings entry, its deeplink handling and its hooks in `ConnectionsManager` / native tgnet.
+we removed it. the upstream fork ships a `WebProxyManager` that opens a local socket but is really a **client**: it tunnels to a remote bridge you supply as a `wss://host/secret` link, so you still depend on somebody else's server. the overlay strips that class, its settings entry, its deeplink handling and its hooks in `ConnectionsManager` / native tgnet.
 
 kirigram embeds the **proxy server itself** as `libkiriproxy.so`. it connects straight to telegram's own `kws{dc}.web.telegram.org` websocket endpoints, cloudflare workers, and falls back to the DC ips. there is no third-party bridge, no link to hunt down, and no second app. it generates its own secret and applies itself to telegram's proxy settings on boot.
 
@@ -40,7 +40,7 @@ see [docs/build.md](docs/build.md) for the actual build steps and [docs/architec
 - cloudflare worker / cfproxy domains, fake-tls, pool size, custom DC IPs
 - in-app settings screen reachable from the notification
 - restore the previous proxy when stopped
-- nullcoregram's other customization, proxy rotation and ayugram/nagram features stay intact; its third-party `WebProxyManager` is removed
+- the upstream fork's other customization and proxy rotation features stay intact; its third-party `WebProxyManager` is removed
 
 ## quick start
 
@@ -63,7 +63,7 @@ docs/                   architecture and build notes
 ## credits
 
 - nikolai kudashov / telegram
-- nullcore developer and the ayugram / nagram people
+- upstream telegram fork developers and contributors
 - flowseal for the original ws proxy idea
 - amurcanov for the android rust port
 

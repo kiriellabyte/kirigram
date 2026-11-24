@@ -2,12 +2,12 @@
 
 ## the three layers
 
-### 1. upstream client (NullcoreGram)
+### 1. upstream client
 
 pinned at `01994b23a8684432490d7a28b6d12c7628d65a10`. it already brings:
 
 - telegram's mtproto stack and proxy settings (`SharedConfig`, `ConnectionsManager`)
-- ayugram/nagram customizations
+- upstream fork customizations
 - a kotlin `WebProxyManager` (removed by our overlay) and `ProxyRotationController`
 - material/customization features we'd otherwise have to write
 
