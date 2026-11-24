@@ -379,7 +379,7 @@ def polish_ui(upstream):
             '                    } else if (position == sourceCodeRow) {\n'
             '                        textCell.setText(link("Source code on GitHub"), divider);\n'
             '                    } else if (position == creditsRow) {\n'
-            '                        textCell.setText(link("Credits - authors and links"), divider);\n',
+            '                        textCell.setText("Credits - authors and links", divider);\n',
             "ns-credits-bind",
         )
         return t
