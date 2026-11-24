@@ -265,10 +265,8 @@ def polish_ui(upstream):
             "import android.content.SharedPreferences;\n",
             "import android.content.SharedPreferences;\n"
             "import android.text.SpannableString;\n"
-            "import android.text.method.LinkMovementMethod;\n"
             "import android.text.style.ForegroundColorSpan;\n"
-            "import android.text.style.URLSpan;\n"
-            "import android.widget.TextView;\n",
+            "import android.text.style.URLSpan;\n",
             "ns-text-imports",
         )
         t = replace_once(
@@ -324,15 +322,9 @@ def polish_ui(upstream):
             '            text.setSpan(new ForegroundColorSpan(blue), a, b, 0);\n'
             '            text.setSpan(new URLSpan(urls[i]), a, b, 0);\n'
             '        }\n'
-            '        TextView view = new TextView(getParentActivity());\n'
-            '        view.setText(text);\n'
-            '        view.setLinksClickable(true);\n'
-            '        view.setMovementMethod(LinkMovementMethod.getInstance());\n'
-            '        view.setTextSize(16);\n'
-            '        view.setPadding(48, 32, 48, 16);\n'
             '        new AlertDialog.Builder(getParentActivity())\n'
             '                .setTitle("Credits")\n'
-            '                .setView(view)\n'
+            '                .setMessage(text)\n'
             '                .setPositiveButton(LocaleController.getString(R.string.OK), null)\n'
             '                .show();\n'
             '    }\n\n'
@@ -346,7 +338,7 @@ def polish_ui(upstream):
             '        } else if (position == sourceCodeRow) {\n'
             '            Browser.openUrl(getParentActivity(), "https://github.com/NullCoreDeveloper/NullcoreGram");\n',
             '        } else if (position == nullCoreRow) {\n'
-            '            getMessagesController().openByUserName("unkwon", this, 1);\n'
+            '            getMessagesController().openByUserName("unknown", this, 1);\n'
             '        } else if (position == sourceCodeRow) {\n'
             '            Browser.openUrl(getParentActivity(), "https://github.com/kiriellabyte/kirigram");\n'
             '        } else if (position == creditsRow) {\n'
@@ -379,7 +371,7 @@ def polish_ui(upstream):
             '                    } else if (position == sourceCodeRow) {\n'
             '                        textCell.setText(LocaleController.getString(R.string.SourceCode), divider);\n',
             '                    if (position == nullCoreRow) {\n'
-            '                        textCell.setTextAndValue("Kirigram", "@unkwon", divider);\n'
+            '                        textCell.setText("Kirigram official channel @unknown", divider);\n'
             '                    } else if (position == sourceCodeRow) {\n'
             '                        textCell.setText(link("Source code on GitHub"), divider);\n'
             '                    } else if (position == creditsRow) {\n'
