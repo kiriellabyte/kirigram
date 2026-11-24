@@ -27,6 +27,10 @@ object KiriProxyManager {
     @Volatile
     private var running = false
 
+    @Volatile
+    var lastError: String? = null
+        private set
+
     fun isRunning(): Boolean = running
 
     fun init(ctx: Context) {
@@ -38,34 +42,55 @@ object KiriProxyManager {
         if (running) return true
 
         val app = ctx.applicationContext
-        val port = KiriPrefs.getPort(app)
+        val preferred = KiriPrefs.getPort(app)
         val host = KiriPrefs.getBindIp(app)
         val secret = ensureSecret(app)
         val cacheDir = File(app.cacheDir, "kirigram_cf").apply { mkdirs() }.absolutePath
 
-        val rc = KiriNative.start(
-            host = host,
-            port = port,
-            dcIps = KiriPrefs.getDcIps(app),
-            secret = secret,
-            verbose = KiriPrefs.getVerbose(app),
-            poolSize = KiriPrefs.getPoolSize(app),
-            bufferKb = KiriPrefs.getBufferKb(app),
-            cfEnabled = KiriPrefs.getCfEnabled(app),
-            cfDomain = KiriPrefs.getCfDomain(app),
-            workerDomains = KiriPrefs.getWorkerDomains(app),
-            fakeTlsDomain = KiriPrefs.getFakeTlsDomain(app),
-            disableSecure = KiriPrefs.getDisableSecure(app),
-            cacheDir = cacheDir
-        )
+        // another proxy app can already own the preferred port (the upstream
+        // tg-ws-proxy app also defaults to 127.0.0.1:1443). walk forward until
+        // the native engine binds, then point telegram at the port we actually
+        // got instead of silently giving up with -3.
+        var rc = -1
+        var boundPort = preferred
+        var lastRc = 0
+        for (p in preferred..(preferred + 20)) {
+            if (p !in 1..65535) break
+            rc = KiriNative.start(
+                host = host,
+                port = p,
+                dcIps = KiriPrefs.getDcIps(app),
+                secret = secret,
+                verbose = KiriPrefs.getVerbose(app),
+                poolSize = KiriPrefs.getPoolSize(app),
+                bufferKb = KiriPrefs.getBufferKb(app),
+                cfEnabled = KiriPrefs.getCfEnabled(app),
+                cfDomain = KiriPrefs.getCfDomain(app),
+                workerDomains = KiriPrefs.getWorkerDomains(app),
+                fakeTlsDomain = KiriPrefs.getFakeTlsDomain(app),
+                disableSecure = KiriPrefs.getDisableSecure(app),
+                cacheDir = cacheDir
+            )
+            lastRc = rc
+            if (rc == 0) {
+                boundPort = p
+                break
+            }
+            // -1 means the native engine itself is already running; retrying
+            // different ports can't fix that
+            if (rc == -1) break
+        }
         if (rc != 0) {
-            Log.e(TAG, "StartProxy failed: $rc")
+            lastError = "could not bind a local proxy port (error $lastRc)"
+            Log.e(TAG, "StartProxy failed: $lastRc")
             return false
         }
 
+        lastError = null
         running = true
+        KiriPrefs.setActivePort(app, boundPort)
         val fullSecret = KiriNative.fullSecret() ?: "dd$secret"
-        AndroidUtilities.runOnUIThread { applyTelegramProxy(app, host, port, fullSecret) }
+        AndroidUtilities.runOnUIThread { applyTelegramProxy(app, host, boundPort, fullSecret) }
         return true
     }
 
@@ -74,6 +99,7 @@ object KiriProxyManager {
             KiriNative.stop()
             running = false
         }
+        lastError = null
         AndroidUtilities.runOnUIThread { restoreTelegramProxy(ctx.applicationContext) }
     }
 

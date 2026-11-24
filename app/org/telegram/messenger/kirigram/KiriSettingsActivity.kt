@@ -57,7 +57,7 @@ class KiriSettingsActivity : Activity() {
             setPadding(0, dp(10), 0, dp(10))
         }
         statusView = TextView(this).apply {
-            text = if (KiriProxyManager.isRunning()) "running" else "stopped"
+            text = statusText()
             textSize = 14f
             setPadding(0, dp(10), 0, dp(10))
         }
@@ -84,6 +84,16 @@ class KiriSettingsActivity : Activity() {
         ).forEach { root.addView(it, wrap) }
 
         setContentView(ScrollView(this).apply { addView(root, wrap) })
+    }
+
+    private fun statusText(): String {
+        val err = KiriProxyManager.lastError
+        if (!KiriProxyManager.isRunning() && err != null) return "error: $err"
+        return if (KiriProxyManager.isRunning()) {
+            "running on ${KiriPrefs.getBindIp(this)}:${KiriPrefs.getActivePort(this)}"
+        } else {
+            "stopped"
+        }
     }
 
     private fun switch(label: String): Switch = Switch(this).apply {

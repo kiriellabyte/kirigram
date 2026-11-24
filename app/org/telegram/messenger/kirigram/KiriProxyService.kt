@@ -86,7 +86,7 @@ class KiriProxyService : Service() {
             flags
         )
 
-        val port = KiriPrefs.getPort(this)
+        val port = KiriPrefs.getActivePort(this)
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.stat_sys_upload)
             .setContentTitle("kirigram proxy")

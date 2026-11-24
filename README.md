@@ -42,6 +42,12 @@ see [docs/build.md](docs/build.md) for the actual build steps and [docs/architec
 - restore the previous proxy when stopped
 - nullcoregram's other customization, proxy rotation and ayugram/nagram features stay intact; its third-party `WebProxyManager` is removed
 
+## troubleshooting
+
+if telegram shows `connecting to proxy...` forever, open the kirigram proxy screen from its notification. it shows the actual bind address and any start error.
+
+the local port defaults to `1443`. if another proxy app already owns it, kirigram automatically tries `1444`, `1445` and so on, then points telegram at the port it actually got. you can also set a different preferred port in the proxy screen.
+
 ## quick start
 
 1. create a github repo from this folder

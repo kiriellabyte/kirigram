@@ -11,6 +11,7 @@ object KiriPrefs {
 
     private const val ENABLED = "enabled"
     private const val PORT = "port"
+    private const val ACTIVE_PORT = "active_port"
     private const val BIND_IP = "bind_ip"
     private const val SECRET = "secret"
     private const val POOL_SIZE = "pool_size"
@@ -37,6 +38,11 @@ object KiriPrefs {
 
     fun getPort(ctx: Context) = p(ctx).getInt(PORT, 1443)
     fun setPort(ctx: Context, v: Int) = p(ctx).edit().putInt(PORT, v.coerceIn(1, 65535)).apply()
+
+    // the port the proxy actually bound to, which can differ from getPort()
+    // when the preferred port is already occupied by another app
+    fun getActivePort(ctx: Context) = p(ctx).getInt(ACTIVE_PORT, getPort(ctx))
+    fun setActivePort(ctx: Context, v: Int) = p(ctx).edit().putInt(ACTIVE_PORT, v).apply()
 
     fun getBindIp(ctx: Context) = p(ctx).getString(BIND_IP, "127.0.0.1") ?: "127.0.0.1"
     fun setBindIp(ctx: Context, v: String) = p(ctx).edit().putString(BIND_IP, v.trim().ifBlank { "127.0.0.1" }).apply()
