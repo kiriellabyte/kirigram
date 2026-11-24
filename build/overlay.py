@@ -181,14 +181,14 @@ def strip_upstream_webproxy(upstream):
 # Nagram, Nekogram). rewrite only the displayed values, never the resource
 # names or code identifiers, so nothing that references them breaks.
 REBRAND = (
-    ("NullcoreGram", "kirigram"),
-    ("NullCoreGram", "kirigram"),
-    ("N-Config", "kirigram settings"),
-    ("NekoX Public Proxy", "kirigram proxy"),
-    ("NCgram", "kirigram"),
-    ("Nagram", "kirigram"),
-    ("Nekogram", "kirigram"),
-    ("NekoX", "kirigram"),
+    ("NullcoreGram", "Kirigram"),
+    ("NullCoreGram", "Kirigram"),
+    ("N-Config", "Kirigram settings"),
+    ("NekoX Public Proxy", "Kirigram proxy"),
+    ("NCgram", "Kirigram"),
+    ("Nagram", "Kirigram"),
+    ("Nekogram", "Kirigram"),
+    ("NekoX", "Kirigram"),
 )
 
 
@@ -230,7 +230,7 @@ def rebrand_strings(upstream):
 
 
 # final ui polish: the mod settings row, the debug version string and the
-# about/credits block. all are plain asserted source edits so upstream drift
+# about/credits popup. all are plain asserted source edits so upstream drift
 # breaks the build instead of silently shipping stale branding.
 def polish_ui(upstream):
     au = os.path.join(upstream, "TMessagesProj/src/main/java/org/telegram/messenger/AndroidUtilities.java")
@@ -249,13 +249,13 @@ def polish_ui(upstream):
         )
 
     def do_sa(t):
-        # single Kirigram row with a subtitle, and no shadow splitting it into
-        # its own section
+        # single Kiriellagram row with a subtitle, and no shadow splitting it
+        # into its own section
         return replace_once(
             t,
             '            items.add(SettingCell.Factory.of(100, 0xFF1BA4ED, 0xFF1488E1, R.drawable.msg_settings, getString(R.string.N_Config)));\n'
             '            items.add(UItem.asShadow(null));\n',
-            '            items.add(SettingCell.Factory.of(100, 0xFF1BA4ED, 0xFF1488E1, R.drawable.msg_settings, "Kirigram", "Mod settings."));\n',
+            '            items.add(SettingCell.Factory.of(100, 0xFF1BA4ED, 0xFF1488E1, R.drawable.msg_settings, "Kiriellagram", "Mod settings"));\n',
             "settings-mod-row",
         )
 
@@ -265,7 +265,10 @@ def polish_ui(upstream):
             "import android.content.SharedPreferences;\n",
             "import android.content.SharedPreferences;\n"
             "import android.text.SpannableString;\n"
-            "import android.text.style.ForegroundColorSpan;\n",
+            "import android.text.method.LinkMovementMethod;\n"
+            "import android.text.style.ForegroundColorSpan;\n"
+            "import android.text.style.URLSpan;\n"
+            "import android.widget.TextView;\n",
             "ns-text-imports",
         )
         t = replace_once(
@@ -279,10 +282,8 @@ def polish_ui(upstream):
             t,
             '    private int sourceCodeRow;\n',
             '    private int sourceCodeRow;\n'
-            '    private int creditEngineRow;\n'
-            '    private int creditUpstreamRow;\n'
-            '    private int creditOriginalRow;\n',
-            "ns-credit-fields",
+            '    private int creditsRow;\n',
+            "ns-credits-field",
         )
         t = replace_once(
             t,
@@ -293,8 +294,50 @@ def polish_ui(upstream):
             '        s.setSpan(new ForegroundColorSpan(Theme.getColor(Theme.key_dialogTextLink)), 0, s.length(), 0);\n'
             '        return s;\n'
             '    }\n\n'
+            '    private void showCredits() {\n'
+            '        String[] roles = {\n'
+            '            "Kirigram",\n'
+            '            "pinned upstream fork",\n'
+            '            "proxy engine",\n'
+            '            "original proxy"\n'
+            '        };\n'
+            '        String[] names = {\n'
+            '            "@kiriellabyte",\n'
+            '            "NullCoreDeveloper",\n'
+            '            "amurcanov",\n'
+            '            "Flowseal"\n'
+            '        };\n'
+            '        String[] urls = {\n'
+            '            "https://github.com/kiriellabyte/kirigram",\n'
+            '            "https://github.com/NullCoreDeveloper/NullcoreGram",\n'
+            '            "https://github.com/amurcanov/tg-ws-proxy-android",\n'
+            '            "https://github.com/Flowseal/tg-ws-proxy"\n'
+            '        };\n'
+            '        SpannableString text = new SpannableString("Credits\\n\\n");\n'
+            '        int blue = Theme.getColor(Theme.key_dialogTextLink);\n'
+            '        for (int i = 0; i < names.length; i++) {\n'
+            '            String line = roles[i] + " - " + names[i] + "\\n";\n'
+            '            int start = text.length();\n'
+            '            text = new SpannableString(text.toString() + line);\n'
+            '            int a = start + roles[i].length() + 3;\n'
+            '            int b = a + names[i].length();\n'
+            '            text.setSpan(new ForegroundColorSpan(blue), a, b, 0);\n'
+            '            text.setSpan(new URLSpan(urls[i]), a, b, 0);\n'
+            '        }\n'
+            '        TextView view = new TextView(getParentActivity());\n'
+            '        view.setText(text);\n'
+            '        view.setLinksClickable(true);\n'
+            '        view.setMovementMethod(LinkMovementMethod.getInstance());\n'
+            '        view.setTextSize(16);\n'
+            '        view.setPadding(48, 32, 48, 16);\n'
+            '        new AlertDialog.Builder(getParentActivity())\n'
+            '                .setTitle("Credits")\n'
+            '                .setView(view)\n'
+            '                .setPositiveButton(LocaleController.getString(R.string.OK), null)\n'
+            '                .show();\n'
+            '    }\n\n'
             '    @Override\n    protected void onItemClick(View view, int position, float x, float y) {',
-            "ns-link-helper",
+            "ns-credits-popup",
         )
         t = replace_once(
             t,
@@ -306,13 +349,9 @@ def polish_ui(upstream):
             '            getMessagesController().openByUserName("unkwon", this, 1);\n'
             '        } else if (position == sourceCodeRow) {\n'
             '            Browser.openUrl(getParentActivity(), "https://github.com/kiriellabyte/kirigram");\n'
-            '        } else if (position == creditEngineRow) {\n'
-            '            Browser.openUrl(getParentActivity(), "https://github.com/amurcanov/tg-ws-proxy-android");\n'
-            '        } else if (position == creditUpstreamRow) {\n'
-            '            Browser.openUrl(getParentActivity(), "https://github.com/NullCoreDeveloper/NullcoreGram");\n'
-            '        } else if (position == creditOriginalRow) {\n'
-            '            Browser.openUrl(getParentActivity(), "https://github.com/Flowseal/tg-ws-proxy");\n',
-            "ns-credit-clicks",
+            '        } else if (position == creditsRow) {\n'
+            '            showCredits();\n',
+            "ns-credits-click",
         )
         t = replace_once(
             t,
@@ -320,7 +359,7 @@ def polish_ui(upstream):
             '        return LocaleController.getString(R.string.N_Config);\n'
             '    }',
             '    protected String getActionBarTitle() {\n'
-            '        return "Kirigram";\n'
+            '        return "Kiriellagram";\n'
             '    }',
             "ns-title",
         )
@@ -330,10 +369,8 @@ def polish_ui(upstream):
             '        sourceCodeRow = addRow("sourceCode");\n',
             '        nullCoreRow = addRow("nullCore");\n'
             '        sourceCodeRow = addRow("sourceCode");\n'
-            '        creditEngineRow = addRow("creditEngine");\n'
-            '        creditUpstreamRow = addRow("creditUpstream");\n'
-            '        creditOriginalRow = addRow("creditOriginal");\n',
-            "ns-credit-rows",
+            '        creditsRow = addRow("credits");\n',
+            "ns-credits-row",
         )
         t = replace_once(
             t,
@@ -345,13 +382,9 @@ def polish_ui(upstream):
             '                        textCell.setTextAndValue("Kirigram", "@unkwon", divider);\n'
             '                    } else if (position == sourceCodeRow) {\n'
             '                        textCell.setText(link("Source code on GitHub"), divider);\n'
-            '                    } else if (position == creditEngineRow) {\n'
-            '                        textCell.setText(link("Proxy engine - tg-ws-proxy-android"), divider);\n'
-            '                    } else if (position == creditUpstreamRow) {\n'
-            '                        textCell.setText(link("Base - pinned upstream fork"), divider);\n'
-            '                    } else if (position == creditOriginalRow) {\n'
-            '                        textCell.setText(link("Original proxy - Flowseal/tg-ws-proxy"), divider);\n',
-            "ns-credit-bind",
+            '                    } else if (position == creditsRow) {\n'
+            '                        textCell.setText(link("Credits - authors and links"), divider);\n',
+            "ns-credits-bind",
         )
         return t
 
@@ -379,7 +412,7 @@ def main(upstream):
 
     def do_manifest(t):
         t = replace_once(t, "</application>", MANIFEST_ADD + "    </application>", "manifest-app-close")
-        t = replace_once(t, 'android:label="@string/NekoX"', 'android:label="kirigram"', "app-label")
+        t = replace_once(t, 'android:label="@string/NekoX"', 'android:label="Kirigram"', "app-label")
         return t
 
     def do_loader(t):

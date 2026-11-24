@@ -1,4 +1,4 @@
-# kirigram
+# Kirigram
 
 an unofficial telegram android mod. customization-focused base with a real built-in MTProto-over-WebSocket proxy for russian users. no second app, no manual `tg://proxy` link — the proxy starts with telegram and configures telegram's own proxy settings by itself.
 
