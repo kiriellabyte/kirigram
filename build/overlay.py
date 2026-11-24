@@ -229,6 +229,137 @@ def rebrand_strings(upstream):
     print(f"rebranded {changed_values} string values in {changed_files} files")
 
 
+# final ui polish: the mod settings row, the debug version string and the
+# about/credits block. all are plain asserted source edits so upstream drift
+# breaks the build instead of silently shipping stale branding.
+def polish_ui(upstream):
+    au = os.path.join(upstream, "TMessagesProj/src/main/java/org/telegram/messenger/AndroidUtilities.java")
+    sa = os.path.join(upstream, "TMessagesProj/src/main/java/org/telegram/ui/SettingsActivity.java")
+    ns = os.path.join(upstream, "TMessagesProj/src/main/java/tw/nekomimi/nekogram/settings/NekoSettingsActivity.java")
+    for p in (au, sa, ns):
+        if not os.path.isfile(p):
+            raise SystemExit("overlay: upstream file missing: " + p)
+
+    def do_au(t):
+        return replace_once(
+            t,
+            '        return "NCgram v" + BuildConfig.VERSION_NAME + " (" + BuildConfig.BUILD_TIMESTAMP + ") " + abi[abi.length - 1];',
+            '        return "Kirigram v0.1 (" + BuildConfig.BUILD_TIMESTAMP + ") " + abi[abi.length - 1];',
+            "debug-version",
+        )
+
+    def do_sa(t):
+        # single Kirigram row with a subtitle, and no shadow splitting it into
+        # its own section
+        return replace_once(
+            t,
+            '            items.add(SettingCell.Factory.of(100, 0xFF1BA4ED, 0xFF1488E1, R.drawable.msg_settings, getString(R.string.N_Config)));\n'
+            '            items.add(UItem.asShadow(null));\n',
+            '            items.add(SettingCell.Factory.of(100, 0xFF1BA4ED, 0xFF1488E1, R.drawable.msg_settings, "Kirigram", "Mod settings."));\n',
+            "settings-mod-row",
+        )
+
+    def do_ns(t):
+        t = replace_once(
+            t,
+            "import android.content.SharedPreferences;\n",
+            "import android.content.SharedPreferences;\n"
+            "import android.text.SpannableString;\n"
+            "import android.text.style.ForegroundColorSpan;\n",
+            "ns-text-imports",
+        )
+        t = replace_once(
+            t,
+            "import org.telegram.ui.ActionBar.AlertDialog;\n",
+            "import org.telegram.ui.ActionBar.AlertDialog;\n"
+            "import org.telegram.ui.ActionBar.Theme;\n",
+            "ns-theme-import",
+        )
+        t = replace_once(
+            t,
+            '    private int sourceCodeRow;\n',
+            '    private int sourceCodeRow;\n'
+            '    private int creditEngineRow;\n'
+            '    private int creditUpstreamRow;\n'
+            '    private int creditOriginalRow;\n',
+            "ns-credit-fields",
+        )
+        t = replace_once(
+            t,
+            '        return fragmentView;\n    }\n\n    @Override\n    protected void onItemClick(View view, int position, float x, float y) {',
+            '        return fragmentView;\n    }\n\n'
+            '    private static CharSequence link(String value) {\n'
+            '        SpannableString s = new SpannableString(value);\n'
+            '        s.setSpan(new ForegroundColorSpan(Theme.getColor(Theme.key_dialogTextLink)), 0, s.length(), 0);\n'
+            '        return s;\n'
+            '    }\n\n'
+            '    @Override\n    protected void onItemClick(View view, int position, float x, float y) {',
+            "ns-link-helper",
+        )
+        t = replace_once(
+            t,
+            '        } else if (position == nullCoreRow) {\n'
+            '            getMessagesController().openByUserName("NullCoreDeveloper", this, 1);\n'
+            '        } else if (position == sourceCodeRow) {\n'
+            '            Browser.openUrl(getParentActivity(), "https://github.com/NullCoreDeveloper/NullcoreGram");\n',
+            '        } else if (position == nullCoreRow) {\n'
+            '            getMessagesController().openByUserName("unkwon", this, 1);\n'
+            '        } else if (position == sourceCodeRow) {\n'
+            '            Browser.openUrl(getParentActivity(), "https://github.com/kiriellabyte/kirigram");\n'
+            '        } else if (position == creditEngineRow) {\n'
+            '            Browser.openUrl(getParentActivity(), "https://github.com/amurcanov/tg-ws-proxy-android");\n'
+            '        } else if (position == creditUpstreamRow) {\n'
+            '            Browser.openUrl(getParentActivity(), "https://github.com/NullCoreDeveloper/NullcoreGram");\n'
+            '        } else if (position == creditOriginalRow) {\n'
+            '            Browser.openUrl(getParentActivity(), "https://github.com/Flowseal/tg-ws-proxy");\n',
+            "ns-credit-clicks",
+        )
+        t = replace_once(
+            t,
+            '    protected String getActionBarTitle() {\n'
+            '        return LocaleController.getString(R.string.N_Config);\n'
+            '    }',
+            '    protected String getActionBarTitle() {\n'
+            '        return "Kirigram";\n'
+            '    }',
+            "ns-title",
+        )
+        t = replace_once(
+            t,
+            '        nullCoreRow = addRow("nullCore");\n'
+            '        sourceCodeRow = addRow("sourceCode");\n',
+            '        nullCoreRow = addRow("nullCore");\n'
+            '        sourceCodeRow = addRow("sourceCode");\n'
+            '        creditEngineRow = addRow("creditEngine");\n'
+            '        creditUpstreamRow = addRow("creditUpstream");\n'
+            '        creditOriginalRow = addRow("creditOriginal");\n',
+            "ns-credit-rows",
+        )
+        t = replace_once(
+            t,
+            '                    if (position == nullCoreRow) {\n'
+            '                        textCell.setTextAndValue("NullCore Projects", "@NullCoreDeveloper", divider);\n'
+            '                    } else if (position == sourceCodeRow) {\n'
+            '                        textCell.setText(LocaleController.getString(R.string.SourceCode), divider);\n',
+            '                    if (position == nullCoreRow) {\n'
+            '                        textCell.setTextAndValue("Kirigram", "@unkwon", divider);\n'
+            '                    } else if (position == sourceCodeRow) {\n'
+            '                        textCell.setText(link("Source code on GitHub"), divider);\n'
+            '                    } else if (position == creditEngineRow) {\n'
+            '                        textCell.setText(link("Proxy engine - tg-ws-proxy-android"), divider);\n'
+            '                    } else if (position == creditUpstreamRow) {\n'
+            '                        textCell.setText(link("Base - pinned upstream fork"), divider);\n'
+            '                    } else if (position == creditOriginalRow) {\n'
+            '                        textCell.setText(link("Original proxy - Flowseal/tg-ws-proxy"), divider);\n',
+            "ns-credit-bind",
+        )
+        return t
+
+    patch(au, do_au)
+    patch(sa, do_sa)
+    patch(ns, do_ns)
+
+
 def main(upstream):
     manifest = os.path.join(upstream, "TMessagesProj/src/main/AndroidManifest.xml")
     loader = os.path.join(
@@ -323,6 +454,7 @@ def main(upstream):
 
     strip_upstream_webproxy(upstream)
     rebrand_strings(upstream)
+    polish_ui(upstream)
 
     print("overlay done")
 
