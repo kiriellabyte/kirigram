@@ -35,6 +35,34 @@ MANIFEST_ADD = """
             android:theme="@android:style/Theme.Material.Light.NoActionBar" />
 """
 
+KIRI_MANIFEST_ADD = """
+        <activity-alias
+            android:enabled="false"
+            android:name="org.telegram.messenger.KiriGramIcon"
+            android:targetActivity="org.telegram.ui.LaunchActivity"
+            android:icon="@mipmap/ic_launcher_kirigram"
+            android:roundIcon="@mipmap/ic_launcher_kirigram_round"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
+        </activity-alias>
+"""
+
+KIRI_ICON_RESOURCES = [
+    "TMessagesProj/src/main/mipmap-hdpi/ic_launcher_kirigram.png",
+    "TMessagesProj/src/main/mipmap-hdpi/ic_launcher_kirigram_round.png",
+    "TMessagesProj/src/main/mipmap-xhdpi/ic_launcher_kirigram.png",
+    "TMessagesProj/src/main/mipmap-xhdpi/ic_launcher_kirigram_round.png",
+    "TMessagesProj/src/main/mipmap-xxhdpi/ic_launcher_kirigram.png",
+    "TMessagesProj/src/main/mipmap-xxhdpi/ic_launcher_kirigram_round.png",
+    "TMessagesProj/src/main/mipmap-xxxhdpi/ic_launcher_kirigram.png",
+    "TMessagesProj/src/main/mipmap-xxxhdpi/ic_launcher_kirigram_round.png",
+]
+
 PROGUARD_ADD = """
 # kirigram
 -keep class org.telegram.messenger.kirigram.** { *; }
@@ -43,6 +71,16 @@ PROGUARD_ADD = """
 -dontwarn com.sun.jna.**
 """
 
+
+def install_kiri_icon(upstream):
+    logo = os.path.join(ROOT, "assets/kirigram-logo.png")
+    if not os.path.isfile(logo):
+        raise SystemExit("overlay: missing asset: " + logo)
+    for rel in KIRI_ICON_RESOURCES:
+        dest = os.path.join(upstream, rel)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copy2(logo, dest)
+        print("wrote icon resource", dest)
 
 def replace_once(text, old, new, label):
     if old not in text:
@@ -319,10 +357,8 @@ def polish_ui(upstream):
             '            text = new SpannableString(text.toString() + line);\n'
             '            int a = start + roles[i].length() + 3;\n'
             '            int b = a + names[i].length();\n'
-            '            if (i == 3) {\n'
-            '                text.setSpan(new ForegroundColorSpan(blue), a, b, 0);\n'
-            '                text.setSpan(new URLSpan(urls[i]), a, b, 0);\n'
-            '            }\n'
+            '            text.setSpan(new ForegroundColorSpan(blue), a, b, 0);\n'
+            '            text.setSpan(new URLSpan(urls[i]), a, b, 0);\n'
             '        }\n'
             '        new AlertDialog.Builder(getParentActivity())\n'
             '                .setTitle("Credits")\n'
@@ -407,7 +443,7 @@ def main(upstream):
             raise SystemExit("overlay: upstream file missing: " + p)
 
     def do_manifest(t):
-        t = replace_once(t, "</application>", MANIFEST_ADD + "    </application>", "manifest-app-close")
+        t = replace_once(t, "</application>", MANIFEST_ADD + KIRI_MANIFEST_ADD + "    </application>", "manifest-app-close")
         t = replace_once(t, 'android:label="@string/NekoX"', 'android:label="Kirigram"', "app-label")
         return t
 
@@ -481,6 +517,35 @@ def main(upstream):
             shutil.copy2(os.path.join(src, name), os.path.join(dest, name))
             print("copied", name)
 
+    launcher = os.path.join(upstream, "TMessagesProj/src/main/java/org/telegram/ui/LauncherIconController.java")
+    strings = os.path.join(upstream, "TMessagesProj/src/main/res/values/strings.xml")
+    if not os.path.isfile(launcher):
+        raise SystemExit("overlay: upstream file missing: " + launcher)
+    if not os.path.isfile(strings):
+        raise SystemExit("overlay: upstream file missing: " + strings)
+
+    def do_launcher(t):
+        return replace_once(
+            t,
+            '        DEFAULT("DefaultIcon", R.mipmap.ic_launcher_nagram, R.mipmap.icon_background_nagram, R.string.AppIconDefault),\n',
+            '        DEFAULT("DefaultIcon", R.mipmap.ic_launcher_nagram, R.mipmap.icon_background_nagram, R.string.AppIconDefault),\n'
+            '        KIRIGRAM("KiriGramIcon", R.mipmap.ic_launcher_kirigram, R.mipmap.ic_launcher_kirigram, R.string.AppIconKirigram),\n',
+            "launcher-kirigram",
+        )
+
+    def do_strings(t):
+        return replace_once(
+            t,
+            '    <string name="AppIconDefault">Default</string>\n',
+            '    <string name="AppIconDefault">Default</string>\n'
+            '    <string name="AppIconKirigram">KiriGram</string>\n',
+            "strings-kirigram",
+        )
+
+    patch(launcher, do_launcher)
+    patch(strings, do_strings)
+
+    install_kiri_icon(upstream)
     strip_upstream_webproxy(upstream)
     rebrand_strings(upstream)
     polish_ui(upstream)
