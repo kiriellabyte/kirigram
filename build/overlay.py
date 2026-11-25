@@ -303,6 +303,7 @@ def polish_ui(upstream):
             "import android.content.SharedPreferences;\n",
             "import android.content.SharedPreferences;\n"
             "import android.text.SpannableString;\n"
+            "import android.text.SpannableStringBuilder;\n"
             "import android.text.style.ForegroundColorSpan;\n"
             "import android.text.style.URLSpan;\n",
             "ns-text-imports",
@@ -349,12 +350,12 @@ def polish_ui(upstream):
             '            "https://github.com/amurcanov/tg-ws-proxy-android",\n'
             '            "https://github.com/Flowseal/tg-ws-proxy"\n'
             '        };\n'
-            '        SpannableString text = new SpannableString("");\n'
+            '        SpannableStringBuilder text = new SpannableStringBuilder();\n'
             '        int blue = Theme.getColor(Theme.key_dialogTextLink);\n'
             '        for (int i = 0; i < names.length; i++) {\n'
             '            String line = roles[i] + " - " + names[i] + "\\n";\n'
             '            int start = text.length();\n'
-            '            text = new SpannableString(text.toString() + line);\n'
+            '            text.append(line);\n'
             '            int a = start + roles[i].length() + 3;\n'
             '            int b = a + names[i].length();\n'
             '            text.setSpan(new ForegroundColorSpan(blue), a, b, 0);\n'
