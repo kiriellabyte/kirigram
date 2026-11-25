@@ -53,14 +53,14 @@ KIRI_MANIFEST_ADD = """
 """
 
 KIRI_ICON_RESOURCES = [
-    "TMessagesProj/src/main/mipmap-hdpi/ic_launcher_kirigram.png",
-    "TMessagesProj/src/main/mipmap-hdpi/ic_launcher_kirigram_round.png",
-    "TMessagesProj/src/main/mipmap-xhdpi/ic_launcher_kirigram.png",
-    "TMessagesProj/src/main/mipmap-xhdpi/ic_launcher_kirigram_round.png",
-    "TMessagesProj/src/main/mipmap-xxhdpi/ic_launcher_kirigram.png",
-    "TMessagesProj/src/main/mipmap-xxhdpi/ic_launcher_kirigram_round.png",
-    "TMessagesProj/src/main/mipmap-xxxhdpi/ic_launcher_kirigram.png",
-    "TMessagesProj/src/main/mipmap-xxxhdpi/ic_launcher_kirigram_round.png",
+    "TMessagesProj/src/main/res/mipmap-hdpi/ic_launcher_kirigram.png",
+    "TMessagesProj/src/main/res/mipmap-hdpi/ic_launcher_kirigram_round.png",
+    "TMessagesProj/src/main/res/mipmap-xhdpi/ic_launcher_kirigram.png",
+    "TMessagesProj/src/main/res/mipmap-xhdpi/ic_launcher_kirigram_round.png",
+    "TMessagesProj/src/main/res/mipmap-xxhdpi/ic_launcher_kirigram.png",
+    "TMessagesProj/src/main/res/mipmap-xxhdpi/ic_launcher_kirigram_round.png",
+    "TMessagesProj/src/main/res/mipmap-xxxhdpi/ic_launcher_kirigram.png",
+    "TMessagesProj/src/main/res/mipmap-xxxhdpi/ic_launcher_kirigram_round.png",
 ]
 
 PROGUARD_ADD = """
